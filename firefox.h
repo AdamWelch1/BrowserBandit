@@ -18,6 +18,8 @@
 
 using namespace std;
 
+#define ffMax(a, b) ((a > b) ? a : b)
+
 class Firefox : public Browser {
 	
 	public:

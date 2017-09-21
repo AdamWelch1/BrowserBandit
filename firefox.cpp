@@ -7,7 +7,8 @@ Firefox::Firefox(const char *pPath)
 	else
 		strncpy(profilePath, pPath, 2047);
 
-	buildAutoCompleteList();
+	buildCredentialList();
+	printReport();
 }
 
 Firefox::~Firefox()
@@ -26,7 +27,59 @@ int Firefox::buildData(uint64_t dataGetFlags = BR_GET_ALL)
 
 void Firefox::printReport()
 {
+	uint32_t maxHostWidth = 0, maxUserWidth = 0, maxPassWidth = 0;
 
+	for(uint32_t i = 0; i < credentialList.size(); i++)
+	{
+		maxHostWidth = ffMax(maxHostWidth, strlen(credentialList[i]->hostname));
+		maxUserWidth = ffMax(maxUserWidth, strlen(credentialList[i]->userName));
+		maxPassWidth = ffMax(maxPassWidth, strlen(credentialList[i]->passWord));
+	}
+
+	maxHostWidth += 2;
+	maxUserWidth += 2;
+	maxPassWidth += 2;
+	uint32_t tableWidth = maxHostWidth + maxUserWidth + maxPassWidth + 4;
+
+	#define repeatChar(chr, count) for(uint32_t i = 0; i < count; i++) putchar(chr);
+	printf(" ");
+	repeatChar('-', (tableWidth - 2));
+	printf(" \n");
+
+	uint32_t padCount = (maxHostWidth - strlen("URL")) / 2;
+	printf("|%*sURL", padCount, " ");
+	padCount = ((maxHostWidth - strlen("URL")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s|", padCount, " ");
+
+	padCount = (maxUserWidth - strlen("User")) / 2;
+	printf("%*sUser", padCount, " ");
+	padCount = ((maxUserWidth - strlen("User")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s|", padCount, " ");
+
+	padCount = (maxPassWidth - strlen("Pass")) / 2;
+	printf("%*sPass", padCount, " ");
+	padCount = ((maxPassWidth - strlen("Pass")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s|", padCount, " ");
+
+	printf("\n|");
+	repeatChar('-', (tableWidth - 2));
+	printf("|\n");
+
+	for(uint32_t i = 0; i < credentialList.size(); i++)
+	{
+		CredentialEntry *ce = credentialList[i];
+
+		printf("| %-*s |", (maxHostWidth - 2), ce->hostname);
+		printf(" %-*s |", (maxUserWidth - 2), ce->userName);
+		printf(" %-*s |\n", (maxPassWidth - 2), ce->passWord);
+
+		printf("|");
+		repeatChar('-', (tableWidth - 2));
+		printf("|\n");
+	}
+
+
+	putchar('\n');
 }
 
 void Firefox::saveReport(uint32_t reportType = REPORT_HTML)
