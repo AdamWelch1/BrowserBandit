@@ -7,7 +7,7 @@ Firefox::Firefox(const char *pPath)
 	else
 		strncpy(profilePath, pPath, 2047);
 
-	buildHistoryList();
+	buildAutoCompleteList();
 }
 
 Firefox::~Firefox()
@@ -281,4 +281,70 @@ void Firefox::addHistoryItem(char *title, char *address, uint32_t timestamp)
 	he->timestamp = timestamp;
 
 	historyList.push_back(he);
+}
+
+bool Firefox::buildAutoCompleteList()
+{
+	char formsFile[3072] = {0};
+	strcpy(formsFile, profilePath);
+	uint32_t ffLen = strlen(formsFile);
+
+	if(formsFile[ffLen-1] != '/')
+	{
+		formsFile[ffLen] = '/';
+		formsFile[ffLen+1] = 0;
+	}
+
+	strcat(formsFile, "formhistory.sqlite");
+
+	sqlite3 *dbHandle = 0;
+	int openResult = sqlite3_open(formsFile, &dbHandle);
+
+	if(openResult != SQLITE_OK)
+	{
+		const char *errMsg = sqlite3_errmsg(dbHandle);
+		printf("SQLite3 Error Message: %s\n", errMsg);
+		return false;
+	}
+
+	sqlite3_exec(dbHandle, "SELECT fieldname,value FROM moz_formhistory", Firefox::sqlAutoCompleteCallback, (void*) this, 0);
+
+	sqlite3_close(dbHandle);
+	return true;
+}
+
+int Firefox::sqlAutoCompleteCallback(void *ffObject, int numColumns, char **rowValues, char **rowHeaders)
+{
+	((Firefox*) ffObject)->addAutoCompleteItem(rowValues[0], rowValues[1]);
+
+	return 0;
+}
+
+void Firefox::addAutoCompleteItem(char *fieldName, char *fieldValue)
+{
+	AutoCompleteEntry *ace = new AutoCompleteEntry;
+
+	if(fieldName != 0)
+	{
+		strncpy(ace->fieldName, fieldName, 255);
+		ace->fieldName[255] = 0;
+
+	} else {
+
+		ace->fieldName[0] = 0;
+	}
+
+	if(fieldValue != 0)
+	{
+		strncpy(ace->fieldValue, fieldValue, 4095);
+		ace->fieldValue[4095] = 0;
+
+	} else {
+
+		ace->fieldValue[0] = 0;
+	}
+
+	printf("%s : %s\n", fieldName, fieldValue);
+
+	autocompleteList.push_back(ace);
 }

@@ -32,6 +32,9 @@ class Firefox : public Browser {
 		static int sqlHistoryCallback(void *ffObject, int numColumns, char **rowValues, char** rowHeaders);
 		void addHistoryItem(char *title, char *address, uint32_t timestamp);
 
+		static int sqlAutoCompleteCallback(void *ffObject, int numColumns, char **rowValues, char **rowHeaders);
+		void addAutoCompleteItem(char *fieldName, char *fieldValue);
+
 	private:
 
 		char profilePath[2048];
@@ -42,6 +45,7 @@ class Firefox : public Browser {
 
 		bool buildCredentialList();
 		bool buildHistoryList();
+		bool buildAutoCompleteList();
 };
 
 #endif

@@ -28,8 +28,8 @@ struct HistoryEntry {
 
 struct AutoCompleteEntry {
 
-	char formField[256];
-	char inputData[4096];
+	char fieldName[256];
+	char fieldValue[4096];
 };
 
 class Browser {
