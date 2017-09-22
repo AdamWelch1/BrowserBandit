@@ -14,7 +14,7 @@ BrowserBandit searches a browser profile folder (firefox, chrome, etc) and repor
 - [ ] Retrieve Chrome history and bookmark entries
 - [ ] Retrieve Chrome AutoComplete form entries
 
-- [ ] Add functionality to print a report of retrieved data
+- [x] Add functionality to print a report of retrieved data
 - [ ] Create HTML template files for generating an HTML report
 - [ ] Implement printing a summary report to the console (first 20 items of each category)
 
