@@ -8,6 +8,8 @@ Firefox::Firefox(const char *pPath)
 		strncpy(profilePath, pPath, 2047);
 
 	buildCredentialList();
+	buildHistoryList();
+	buildAutoCompleteList();
 	printReport();
 }
 
@@ -27,6 +29,7 @@ int Firefox::buildData(uint64_t dataGetFlags = BR_GET_ALL)
 
 void Firefox::printReport()
 {
+	printf("\n\n\n***Credentials***\n");
 	uint32_t maxHostWidth = 0, maxUserWidth = 0, maxPassWidth = 0;
 
 	for(uint32_t i = 0; i < credentialList.size(); i++)
@@ -72,14 +75,118 @@ void Firefox::printReport()
 		printf("| %-*s |", (maxHostWidth - 2), ce->hostname);
 		printf(" %-*s |", (maxUserWidth - 2), ce->userName);
 		printf(" %-*s |\n", (maxPassWidth - 2), ce->passWord);
+	}
+	printf(" ");
+	repeatChar('-', tableWidth - 2);
+	printf(" \n\n");
 
-		printf("|");
-		repeatChar('-', (tableWidth - 2));
-		printf("|\n");
+	printf("\n***History (First 20 entries, max)***\n");
+	uint32_t historyCount = ffMin(20, historyList.size());
+	uint32_t titleMaxWidth = 0, addrMaxWidth = 0, timeMaxWidth = 0;
+
+	for(uint32_t i = 0; i < historyCount; i++)
+	{
+		titleMaxWidth = ffMax(titleMaxWidth, strlen(historyList[i]->title));
+		addrMaxWidth = ffMax(addrMaxWidth, strlen(historyList[i]->address));
+
+		char tmpTime[512] = {0};
+		struct tm *timeData = localtime((time_t*) &(historyList[i]->timestamp));
+		strftime(tmpTime, 512, "%R %x", timeData);
+
+		timeMaxWidth = ffMax(timeMaxWidth, strlen(tmpTime));
 	}
 
+	titleMaxWidth = ffMin(60, titleMaxWidth);
+	addrMaxWidth = ffMin(60, addrMaxWidth);
 
-	putchar('\n');
+	titleMaxWidth += 2;
+	addrMaxWidth += 2;
+	timeMaxWidth += 2;
+
+	tableWidth = titleMaxWidth + addrMaxWidth + timeMaxWidth + 4;
+	printf(" ");
+	repeatChar('-', tableWidth - 2);
+	printf(" \n");
+
+	padCount = (titleMaxWidth - strlen("Title")) / 2;
+	printf("|%*sTitle", padCount, " ");
+	padCount = ((titleMaxWidth - strlen("Title")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s", padCount, " ");
+
+	padCount = (addrMaxWidth - strlen("Address")) / 2;
+	printf("|%*sAddress", padCount, " ");
+	padCount = ((addrMaxWidth - strlen("Address")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s", padCount, " ");
+
+	padCount = (timeMaxWidth - strlen("Time")) / 2;
+	printf("|%*sTime", padCount, " ");
+	padCount = ((timeMaxWidth - strlen("Time")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s|\n", padCount, " ");
+
+	printf("|");
+	repeatChar('-', tableWidth - 2);
+	printf("|\n");
+
+	for(uint32_t i = 0; i < historyCount; i++)
+	{
+		printf("| %-*.*s ", (titleMaxWidth - 2), (titleMaxWidth - 2), historyList[i]->title);
+		printf("| %-*.*s ", (addrMaxWidth - 2), (addrMaxWidth - 2), historyList[i]->address);
+
+		char tmpTime[512];
+		struct tm *timeData = localtime((time_t*) &(historyList[i]->timestamp));
+		strftime(tmpTime, 512, "%R %x", timeData);
+
+		printf("| %-*s |\n", (timeMaxWidth - 2), tmpTime);
+	}
+
+	printf(" ");
+	repeatChar('-', tableWidth - 2);
+	printf(" \n\n");
+
+	printf("\n***Form AutoComplete List (First 20 entries, max)***\n");
+	uint32_t formlistCount = ffMin(20, autocompleteList.size());
+	uint32_t fieldNameMax = 0, fieldValueMax = 0;
+
+	for(uint32_t i = 0; i < formlistCount; i++)
+	{
+		fieldNameMax = ffMax(fieldNameMax, strlen(autocompleteList[i]->fieldName));
+		fieldValueMax = ffMax(fieldValueMax, strlen(autocompleteList[i]->fieldValue));
+	}
+
+	fieldNameMax = ffMax(fieldNameMax, strlen(" Field Name "));
+	fieldValueMax = ffMax(fieldValueMax, strlen(" Value "));
+
+	fieldNameMax = ffMin(60, fieldNameMax) + 2;
+	fieldValueMax = ffMin(60, fieldValueMax) + 2;
+
+	tableWidth = fieldNameMax + fieldValueMax + 3;
+	printf(" ");
+	repeatChar('-', tableWidth - 2);
+	printf(" \n");
+
+	padCount = (fieldNameMax - strlen("Field Name")) / 2;
+	printf("|%*sField Name", padCount, " ");
+	padCount = ((fieldNameMax - strlen("Field Name")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s", padCount, " ");
+
+	padCount = (fieldValueMax - strlen("Value")) / 2;
+	printf("|%*sValue", padCount, " ");
+	padCount = ((fieldValueMax - strlen("Value")) % 2 != 0) ? padCount + 1 : padCount;
+	printf("%*s|\n", padCount, " ");
+
+	printf("|");
+	repeatChar('-', tableWidth - 2);
+	printf("|\n");
+
+	for(uint32_t i = 0; i < formlistCount; i++)
+	{
+		printf("| %-*.*s ", (fieldNameMax - 2), (fieldNameMax - 2), autocompleteList[i]->fieldName);
+		printf("| %-*.*s |\n", (fieldValueMax - 2), (fieldValueMax - 2), autocompleteList[i]->fieldValue);
+	}
+
+	printf(" ");
+	repeatChar('-', tableWidth - 2);
+	printf(" \n\n");
 }
 
 void Firefox::saveReport(uint32_t reportType = REPORT_HTML)
@@ -304,7 +411,7 @@ int Firefox::sqlHistoryCallback(void *ffObject, int numColumns, char **rowValues
 	uint32_t timestamp = 0;
 
 	if(rowValues[2] != 0)
-		timestamp = strtoul(rowValues[2], 0, 10);
+		timestamp = static_cast<uint32_t>(strtod(rowValues[2], 0) / 1000000.0);
 
 	((Firefox*) ffObject)->addHistoryItem(rowValues[0], rowValues[1], timestamp);
 
@@ -396,8 +503,6 @@ void Firefox::addAutoCompleteItem(char *fieldName, char *fieldValue)
 
 		ace->fieldValue[0] = 0;
 	}
-
-	printf("%s : %s\n", fieldName, fieldValue);
 
 	autocompleteList.push_back(ace);
 }

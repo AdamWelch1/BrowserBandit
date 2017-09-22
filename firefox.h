@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdint>
+#include <ctime>
 #include <cstdlib>
 
 #include <nss/nss.h>
@@ -19,6 +20,7 @@
 using namespace std;
 
 #define ffMax(a, b) ((a > b) ? a : b)
+#define ffMin(a, b) ((a < b) ? a : b)
 
 class Firefox : public Browser {
 	

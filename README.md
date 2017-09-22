@@ -21,4 +21,4 @@ BrowserBandit searches a browser profile folder (firefox, chrome, etc) and repor
 
 #### Notes
 
-It appears that Google Chrome uses the Windows Data Protection API to encrypt stored login credentials. This means that the credentials can only be decrypted when logged in in Windows under that user profile, or possibly from any **Windows** account on that same machine.
+It appears that Google Chrome uses the Windows Data Protection API to encrypt stored login credentials. This means that the credentials can only be decrypted when logged in in Windows under that user profile, or possibly from any **Windows** account on that same machine. Likewise on Linux, it appears to use Gnome-keyring to store credentials, making it difficult/impossible to decrypt.
