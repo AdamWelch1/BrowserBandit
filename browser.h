@@ -2,6 +2,7 @@
 #define BROWSER_H
 
 #include <cstdint>
+#include <cstring>
 
 #define BR_GET_CREDENTIALS		1
 #define BR_GET_HISTORY			2
@@ -11,6 +12,7 @@
 
 #define REPORT_HTML		1
 #define REPORT_TEXT		2
+#define REPORT_CSV		3
 
 struct CredentialEntry {
 
@@ -40,6 +42,19 @@ class Browser {
 		virtual void printReport() = 0;
 		virtual void saveReport(uint32_t reportType = REPORT_HTML) = 0;
 
+		void makeCenteredString(const char *strIn, char *strOut, uint32_t length)
+		{
+			uint32_t spacesBefore = 0;
+			spacesBefore = (length / 2) - (strlen(strIn) / 2);
+
+			if(strlen(strIn) % 2 != 0)
+				spacesBefore -= 1;
+
+			for(uint32_t i = 0; i < spacesBefore; i++)
+				strOut[i] = ' ';
+
+			strcpy((strOut + spacesBefore), strIn);
+		}
 };
 
 #endif

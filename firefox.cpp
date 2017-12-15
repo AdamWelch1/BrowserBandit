@@ -29,164 +29,126 @@ int Firefox::buildData(uint64_t dataGetFlags = BR_GET_ALL)
 
 void Firefox::printReport()
 {
-	printf("\n\n\n***Credentials***\n");
-	uint32_t maxHostWidth = 0, maxUserWidth = 0, maxPassWidth = 0;
-
-	for(uint32_t i = 0; i < credentialList.size(); i++)
-	{
-		maxHostWidth = ffMax(maxHostWidth, strlen(credentialList[i]->hostname));
-		maxUserWidth = ffMax(maxUserWidth, strlen(credentialList[i]->userName));
-		maxPassWidth = ffMax(maxPassWidth, strlen(credentialList[i]->passWord));
-	}
-
-	maxHostWidth += 2;
-	maxUserWidth += 2;
-	maxPassWidth += 2;
-	uint32_t tableWidth = maxHostWidth + maxUserWidth + maxPassWidth + 4;
-
 	#define repeatChar(chr, count) for(uint32_t i = 0; i < count; i++) putchar(chr);
-	printf(" ");
-	repeatChar('-', (tableWidth - 2));
-	printf(" \n");
 
-	uint32_t padCount = (maxHostWidth - strlen("URL")) / 2;
-	printf("|%*sURL", padCount, " ");
-	padCount = ((maxHostWidth - strlen("URL")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s|", padCount, " ");
-
-	padCount = (maxUserWidth - strlen("User")) / 2;
-	printf("%*sUser", padCount, " ");
-	padCount = ((maxUserWidth - strlen("User")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s|", padCount, " ");
-
-	padCount = (maxPassWidth - strlen("Pass")) / 2;
-	printf("%*sPass", padCount, " ");
-	padCount = ((maxPassWidth - strlen("Pass")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s|", padCount, " ");
-
-	printf("\n|");
-	repeatChar('-', (tableWidth - 2));
-	printf("|\n");
-
-	for(uint32_t i = 0; i < credentialList.size(); i++)
+	if(credentialList.size() > 0)
 	{
-		CredentialEntry *ce = credentialList[i];
+		printf("\n\n\n***Credentials (20 entries, max)***\n");
+		uint32_t maxHostWidth = 0, maxUserWidth = 0, maxPassWidth = 0;
 
-		printf("| %-*s |", (maxHostWidth - 2), ce->hostname);
-		printf(" %-*s |", (maxUserWidth - 2), ce->userName);
-		printf(" %-*s |\n", (maxPassWidth - 2), ce->passWord);
-	}
-	printf(" ");
-	repeatChar('-', tableWidth - 2);
-	printf(" \n\n");
+		for(uint32_t i = 0; i < credentialList.size(); i++)
+		{
+			maxHostWidth = ffMax(maxHostWidth, strlen(credentialList[i]->hostname));
+			maxUserWidth = ffMax(maxUserWidth, strlen(credentialList[i]->userName));
+			maxPassWidth = ffMax(maxPassWidth, strlen(credentialList[i]->passWord));
+		}
 
-	printf("\n***History (First 20 entries, max)***\n");
-	uint32_t historyCount = ffMin(20, historyList.size());
-	uint32_t titleMaxWidth = 0, addrMaxWidth = 0, timeMaxWidth = 0;
+		uint32_t rowWidth = maxHostWidth + maxUserWidth + maxPassWidth + 10;
+		
+		char tmpColumn[500] = {0};
+		repeatChar('-', rowWidth);
+		printf("\n");
+		makeCenteredString("URL", tmpColumn, maxHostWidth);
+		printf("| %-*s ", maxHostWidth, tmpColumn);
+		makeCenteredString("User", tmpColumn, maxUserWidth);
+		printf("| %-*s ", maxUserWidth, tmpColumn);
+		makeCenteredString("Pass", tmpColumn, maxPassWidth);
+		printf("| %-*s |\n", maxPassWidth, tmpColumn);
+		repeatChar('-', rowWidth);
+		printf("\n");
 
-	for(uint32_t i = 0; i < historyCount; i++)
-	{
-		titleMaxWidth = ffMax(titleMaxWidth, strlen(historyList[i]->title));
-		addrMaxWidth = ffMax(addrMaxWidth, strlen(historyList[i]->address));
+		for(uint32_t i = 0; i < ffMin(20, credentialList.size()); i++)
+		{
+			printf("| %-*s ", maxHostWidth, credentialList[i]->hostname);
+			printf("| %-*s ", maxUserWidth, credentialList[i]->userName);
+			printf("| %-*s |\n", maxPassWidth, credentialList[i]->passWord);
+		}
 
-		char tmpTime[512] = {0};
-		struct tm *timeData = localtime((time_t*) &(historyList[i]->timestamp));
-		strftime(tmpTime, 512, "%R %x", timeData);
+		repeatChar('-', rowWidth);
+		printf("\n\n");
+	} else {
 
-		timeMaxWidth = ffMax(timeMaxWidth, strlen(tmpTime));
+		printf("No credentials were found.\n\n");
 	}
 
-	titleMaxWidth = ffMin(60, titleMaxWidth);
-	addrMaxWidth = ffMin(60, addrMaxWidth);
-
-	titleMaxWidth += 2;
-	addrMaxWidth += 2;
-	timeMaxWidth += 2;
-
-	tableWidth = titleMaxWidth + addrMaxWidth + timeMaxWidth + 4;
-	printf(" ");
-	repeatChar('-', tableWidth - 2);
-	printf(" \n");
-
-	padCount = (titleMaxWidth - strlen("Title")) / 2;
-	printf("|%*sTitle", padCount, " ");
-	padCount = ((titleMaxWidth - strlen("Title")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s", padCount, " ");
-
-	padCount = (addrMaxWidth - strlen("Address")) / 2;
-	printf("|%*sAddress", padCount, " ");
-	padCount = ((addrMaxWidth - strlen("Address")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s", padCount, " ");
-
-	padCount = (timeMaxWidth - strlen("Time")) / 2;
-	printf("|%*sTime", padCount, " ");
-	padCount = ((timeMaxWidth - strlen("Time")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s|\n", padCount, " ");
-
-	printf("|");
-	repeatChar('-', tableWidth - 2);
-	printf("|\n");
-
-	for(uint32_t i = 0; i < historyCount; i++)
+	if(historyList.size() > 0)
 	{
-		printf("| %-*.*s ", (titleMaxWidth - 2), (titleMaxWidth - 2), historyList[i]->title);
-		printf("| %-*.*s ", (addrMaxWidth - 2), (addrMaxWidth - 2), historyList[i]->address);
+		printf("\n\n\n***History (20 entries, max)***\n");
+		uint32_t maxTitleWidth = 0, maxAddrWidth = 0, maxTimestampWidth = 0;
 
-		char tmpTime[512];
-		struct tm *timeData = localtime((time_t*) &(historyList[i]->timestamp));
-		strftime(tmpTime, 512, "%R %x", timeData);
+		for(uint32_t i = 0; i < credentialList.size(); i++)
+		{
+			maxTitleWidth = ffMax(maxTitleWidth, strlen(historyList[i]->title));
+			maxAddrWidth = ffMax(maxAddrWidth, strlen(historyList[i]->address));
+			maxTimestampWidth = ffMax(maxTimestampWidth, strlen(ctime((time_t*) &(historyList[i]->timestamp))));
+		}
 
-		printf("| %-*s |\n", (timeMaxWidth - 2), tmpTime);
+		uint32_t rowWidth = maxTitleWidth + maxAddrWidth + maxTimestampWidth + 10;
+		char tmpColumn[500] = {0};
+
+		repeatChar('-', rowWidth);
+		makeCenteredString("Title", tmpColumn, maxTitleWidth);
+		printf("| %-*s ", maxTitleWidth, tmpColumn);
+		makeCenteredString("Address", tmpColumn, maxAddrWidth);
+		printf("| %-*s", maxAddrWidth, tmpColumn);
+		makeCenteredString("Date/Time", tmpColumn, maxTimestampWidth);
+		printf("| %-*s |\n", maxTimestampWidth, tmpColumn);
+		repeatChar('-', rowWidth);
+		printf("\n");
+
+		for(uint32_t i = 0; i < ffMin(20, historyList.size()); i++)
+		{
+			printf("| %-*s ", maxTitleWidth, historyList[i]->title);
+			printf("| %-*s ", maxAddrWidth, historyList[i]->address);
+			printf("| %-*s |\n", maxTimestampWidth, ctime((time_t*) &(historyList[i]->timestamp)));
+		}
+
+		repeatChar('-', rowWidth);
+		printf("\n\n");
+
+	} else {
+
+		printf("No history entries were found.\n\n");
 	}
 
-	printf(" ");
-	repeatChar('-', tableWidth - 2);
-	printf(" \n\n");
-
-	printf("\n***Form AutoComplete List (First 20 entries, max)***\n");
-	uint32_t formlistCount = ffMin(20, autocompleteList.size());
-	uint32_t fieldNameMax = 0, fieldValueMax = 0;
-
-	for(uint32_t i = 0; i < formlistCount; i++)
+	if(autocompleteList.size() > 0)
 	{
-		fieldNameMax = ffMax(fieldNameMax, strlen(autocompleteList[i]->fieldName));
-		fieldValueMax = ffMax(fieldValueMax, strlen(autocompleteList[i]->fieldValue));
+		uint32_t maxFnWidth = 0, maxFvWidth = 0;
+
+		for(uint32_t i = 0; i < autocompleteList.size(); i++)
+		{
+			maxFnWidth = ffMax(maxFnWidth, strlen(autocompleteList[i]->fieldName));
+			maxFvWidth = ffMax(maxFvWidth, strlen(autocompleteList[i]->fieldValue));
+		}
+
+		uint32_t rowWidth = maxFnWidth + maxFvWidth + 7;
+		char tmpColumn[500] = {0};
+
+		repeatChar('-', rowWidth);
+		printf("\n");
+		makeCenteredString("Field Name", tmpColumn, maxFnWidth);
+		printf("| %-*s ", maxFnWidth, tmpColumn);
+		makeCenteredString("Value", tmpColumn, maxFvWidth);
+		printf("| %-*s |\n", maxFvWidth, tmpColumn);
+
+		repeatChar('-', rowWidth);
+		printf("\n");
+
+		for(uint32_t i = 0; i < ffMin(20, autocompleteList.size()); i++)
+		{
+			printf("| %-*s ", maxFnWidth, autocompleteList[i]->fieldName);
+			printf("| %-*s |\n", maxFvWidth, autocompleteList[i]->fieldValue);
+		}
+
+		repeatChar('-', rowWidth);
+		printf("\n\n");
+
+	} else {
+
+		printf("No AutoComplete entries were found.\n\n");
 	}
 
-	fieldNameMax = ffMax(fieldNameMax, strlen(" Field Name "));
-	fieldValueMax = ffMax(fieldValueMax, strlen(" Value "));
-
-	fieldNameMax = ffMin(60, fieldNameMax) + 2;
-	fieldValueMax = ffMin(60, fieldValueMax) + 2;
-
-	tableWidth = fieldNameMax + fieldValueMax + 3;
-	printf(" ");
-	repeatChar('-', tableWidth - 2);
-	printf(" \n");
-
-	padCount = (fieldNameMax - strlen("Field Name")) / 2;
-	printf("|%*sField Name", padCount, " ");
-	padCount = ((fieldNameMax - strlen("Field Name")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s", padCount, " ");
-
-	padCount = (fieldValueMax - strlen("Value")) / 2;
-	printf("|%*sValue", padCount, " ");
-	padCount = ((fieldValueMax - strlen("Value")) % 2 != 0) ? padCount + 1 : padCount;
-	printf("%*s|\n", padCount, " ");
-
-	printf("|");
-	repeatChar('-', tableWidth - 2);
-	printf("|\n");
-
-	for(uint32_t i = 0; i < formlistCount; i++)
-	{
-		printf("| %-*.*s ", (fieldNameMax - 2), (fieldNameMax - 2), autocompleteList[i]->fieldName);
-		printf("| %-*.*s |\n", (fieldValueMax - 2), (fieldValueMax - 2), autocompleteList[i]->fieldValue);
-	}
-
-	printf(" ");
-	repeatChar('-', tableWidth - 2);
-	printf(" \n\n");
+	#undef repeatChar
 }
 
 void Firefox::saveReport(uint32_t reportType = REPORT_HTML)
@@ -365,7 +327,7 @@ bool Firefox::buildCredentialList()
 		
 		} else {
 
-			printf("Failed to decrypte credentials!\n");
+			printf("Failed to decrypt credentials!\n");
 		}
 
 		delete[] encUsers[i];
