@@ -6,11 +6,6 @@ Firefox::Firefox(const char *pPath)
 		strcpy(profilePath, "./");
 	else
 		strncpy(profilePath, pPath, 2047);
-
-	buildCredentialList();
-	buildHistoryList();
-	buildAutoCompleteList();
-	printReport();
 }
 
 Firefox::~Firefox()
@@ -24,7 +19,14 @@ Firefox::~Firefox()
 
 int Firefox::buildData(uint64_t dataGetFlags = BR_GET_ALL)
 {
+	if((dataGetFlags & BR_GET_CREDENTIALS) != 0)
+		buildCredentialList();
 
+	if((dataGetFlags & BR_GET_HISTORY) != 0)
+		buildHistoryList();
+
+	if((dataGetFlags & BR_GET_AUTOCOMPLETE) != 0)
+		buildAutoCompleteList();
 }
 
 void Firefox::printReport()
@@ -43,6 +45,10 @@ void Firefox::printReport()
 			maxPassWidth = ffMax(maxPassWidth, strlen(credentialList[i]->passWord));
 		}
 
+		maxHostWidth = ffMin(maxHostWidth, 50);
+		maxUserWidth = ffMin(maxUserWidth, 50);
+		maxPassWidth = ffMin(maxPassWidth, 50);
+
 		uint32_t rowWidth = maxHostWidth + maxUserWidth + maxPassWidth + 10;
 		
 		char tmpColumn[500] = {0};
@@ -59,9 +65,9 @@ void Firefox::printReport()
 
 		for(uint32_t i = 0; i < ffMin(20, credentialList.size()); i++)
 		{
-			printf("| %-*s ", maxHostWidth, credentialList[i]->hostname);
-			printf("| %-*s ", maxUserWidth, credentialList[i]->userName);
-			printf("| %-*s |\n", maxPassWidth, credentialList[i]->passWord);
+			printf("| %-*.50s ", maxHostWidth, credentialList[i]->hostname);
+			printf("| %-*.50s ", maxUserWidth, credentialList[i]->userName);
+			printf("| %-*.50s |\n", maxPassWidth, credentialList[i]->passWord);
 		}
 
 		repeatChar('-', rowWidth);
@@ -83,10 +89,15 @@ void Firefox::printReport()
 			maxTimestampWidth = ffMax(maxTimestampWidth, strlen(ctime((time_t*) &(historyList[i]->timestamp))));
 		}
 
+		maxTitleWidth = ffMin(maxTitleWidth, 50);
+		maxAddrWidth = ffMin(maxAddrWidth, 50);
+		maxTimestampWidth = ffMin(maxTimestampWidth, 50);
+
 		uint32_t rowWidth = maxTitleWidth + maxAddrWidth + maxTimestampWidth + 10;
 		char tmpColumn[500] = {0};
 
 		repeatChar('-', rowWidth);
+		printf("\n");
 		makeCenteredString("Title", tmpColumn, maxTitleWidth);
 		printf("| %-*s ", maxTitleWidth, tmpColumn);
 		makeCenteredString("Address", tmpColumn, maxAddrWidth);
@@ -98,9 +109,25 @@ void Firefox::printReport()
 
 		for(uint32_t i = 0; i < ffMin(20, historyList.size()); i++)
 		{
-			printf("| %-*s ", maxTitleWidth, historyList[i]->title);
-			printf("| %-*s ", maxAddrWidth, historyList[i]->address);
-			printf("| %-*s |\n", maxTimestampWidth, ctime((time_t*) &(historyList[i]->timestamp)));
+			char *tsstr = ctime((time_t*) &(historyList[i]->timestamp));
+			tsstr[strlen(tsstr)-1] = 0;
+
+			char tmpTitle[51] = {0};
+			char tmpAddr[51] = {0};
+			strncpy(tmpTitle, historyList[i]->title, 51);
+			strncpy(tmpAddr, historyList[i]->address, 51);
+
+			while(strlen(tmpTitle) < 50)
+				tmpTitle[strlen(tmpTitle)] = ' ';
+			tmpTitle[50] = 0;
+
+			while(strlen(tmpAddr) < 50)
+				tmpAddr[strlen(tmpAddr)] = ' ';
+			tmpAddr[50] = 0;
+
+			printf("| %-50s ", tmpTitle);
+			printf("| %-50s ", tmpAddr);
+			printf("| %-24s |\n", tsstr);
 		}
 
 		repeatChar('-', rowWidth);
@@ -121,6 +148,9 @@ void Firefox::printReport()
 			maxFvWidth = ffMax(maxFvWidth, strlen(autocompleteList[i]->fieldValue));
 		}
 
+		maxFnWidth = ffMin(maxFnWidth, 100);
+		maxFvWidth = ffMin(maxFvWidth, 100);
+
 		uint32_t rowWidth = maxFnWidth + maxFvWidth + 7;
 		char tmpColumn[500] = {0};
 
@@ -136,8 +166,8 @@ void Firefox::printReport()
 
 		for(uint32_t i = 0; i < ffMin(20, autocompleteList.size()); i++)
 		{
-			printf("| %-*s ", maxFnWidth, autocompleteList[i]->fieldName);
-			printf("| %-*s |\n", maxFvWidth, autocompleteList[i]->fieldValue);
+			printf("| %-*.100s ", maxFnWidth, autocompleteList[i]->fieldName);
+			printf("| %-*.100s |\n", maxFvWidth, autocompleteList[i]->fieldValue);
 		}
 
 		repeatChar('-', rowWidth);

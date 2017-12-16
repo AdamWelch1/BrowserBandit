@@ -189,34 +189,15 @@ int main(int argc, char **argv)
 	if(profileType == 0)
 		return fatalError("You must provide a profile type with --browser!\n");
 
-	printf("Profile path: %s\n", profilePath);
-	printf("Outfile path: %s\n", outfilePath);
 
-	printf("Report type: ");
+	if((argFlags & F_BROWSER_FF) != 0)
+	{
+		Firefox ff(profilePath);
+		ff.buildData(BR_GET_ALL);
 
-	if(reportType == F_REPORT_CSV)
-		printf("CSV\n");
-	if(reportType == F_REPORT_HTML)
-		printf("HTML\n");
-	if(reportType == F_REPORT_PLAIN)
-		printf("Plain\n");
-
-	printf("Browser: ");
-
-	if(profileType == F_BROWSER_GC)
-		printf("Chrome\n");
-	if(profileType == F_BROWSER_FF)
-		printf("Firefox\n");
-
-	if((argFlags & F_VERBOSE) != 0)
-		printf("Verbose: Yes\n");
-	else
-		printf("Verbose: No\n");
-
-	printf("\n");
-
-
-	Firefox ff(profilePath);
+		if((argFlags & F_VERBOSE) != 0)
+			ff.printReport();
+	}
 
 	return 0;
 }

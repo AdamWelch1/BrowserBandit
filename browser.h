@@ -38,7 +38,7 @@ class Browser {
 	
 	public:
 
-		virtual int buildData(uint64_t dataGetFlags = BR_GET_ALL) = 0;
+		virtual int buildData(uint64_t dataGetFlags) = 0;
 		virtual void printReport() = 0;
 		virtual void saveReport(uint32_t reportType = REPORT_HTML) = 0;
 
