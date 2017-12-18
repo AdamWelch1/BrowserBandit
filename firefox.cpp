@@ -63,7 +63,7 @@ void Firefox::printReport()
 		repeatChar('-', rowWidth);
 		printf("\n");
 
-		for(uint32_t i = 0; i < ffMin(20, credentialList.size()); i++)
+		for(uint32_t i = 0; i < ffMin(200, credentialList.size()); i++)
 		{
 			printf("| %-*.50s ", maxHostWidth, credentialList[i]->hostname);
 			printf("| %-*.50s ", maxUserWidth, credentialList[i]->userName);
